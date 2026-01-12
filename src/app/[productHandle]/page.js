@@ -13,6 +13,7 @@ const Page = async ({ params }) => {
     return (
         <>
         Page
+        <h1>      {product.title}</h1>
         </>
     )
 }
