@@ -9,6 +9,7 @@ const Page = async ({ params }) => {
     const productHandle = (await params).productHandle
     const product = await getProduct(storeId, productHandle)
     console.log('heres my product', product)
+    if (!product) return <h1>No product found you donut!</h1>
 
     return (
         <>
