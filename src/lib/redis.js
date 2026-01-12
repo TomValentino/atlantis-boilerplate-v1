@@ -1,9 +1,7 @@
 import { createClient } from 'redis'
 
 /*--------------------------------------------------------------*/
-
 /*                     🔧 MAIN SETUP                            */
-
 /*--------------------------------------------------------------*/
 
 let redis
@@ -33,9 +31,7 @@ export { redis }
 
 
 /*--------------------------------------------------------------*/
-
 /*                     🔧 PRODUCTS                              */
-
 /*--------------------------------------------------------------*/
 
 export async function getProduct(storeId, productHandle ) {
@@ -63,5 +59,37 @@ export async function getProduct(storeId, productHandle ) {
       ok: false,
       error: 'REDIS_ERROR',
     }
+  }
+}
+
+/*--------------------------------------------------------------*/
+/*                     🔧 GET ALL PRODUCTS                       */
+/*--------------------------------------------------------------*/
+
+export async function getAllProducts(storeId) {
+  try {
+    await ensureRedis()
+
+    const pattern = `store:${storeId}:product:*`
+
+    // 1. Get all product keys
+    const keys = await redis.keys(pattern)
+
+    if (keys.length === 0) {
+      return { ok: true, data: [] }
+    }
+
+    // 2. Fetch JSON for each key
+    const products = []
+    for (const key of keys) {
+      const json = await redis.json.get(key)
+      if (json) products.push(json)
+    }
+
+    return { ok: true, data: products }
+
+  } catch (err) {
+    console.error("[getAllProducts]", err)
+    return { ok: false, error: "REDIS_ERROR" }
   }
 }
