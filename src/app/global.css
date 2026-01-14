@@ -40,3 +40,39 @@ a {
     color-scheme: dark;
   }
 }
+
+
+
+/* Slider cart */
+
+
+
+.slider-cart {
+  position: fixed;
+  top: 0px;
+  bottom: 0px;
+  right: 0px;
+  width: 400px;
+  background-color: #171717;
+  z-index: 99;
+  transform:translateX(100%);
+  transition: all 0.5s ease;
+  will-change: transform;
+}
+
+.slider-cart.show {
+  transform:translateX(0%);
+
+}
+.slider-cart.hide {
+  transform:translateX(100%);
+  pointer-events: none;
+}
+
+.default-cart-item-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  justify-content: flex-start;
+  align-items: center;
+}
