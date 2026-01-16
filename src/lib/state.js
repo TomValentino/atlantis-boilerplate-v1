@@ -29,6 +29,11 @@ export const createCustomState = (initialState, customMethods = {}) => {
     }
   };
 
+  const setSilent = (key, val) => {
+    state[key] = val;
+    // no notify
+  };
+
   const subscribe = (key, cb) => {
     subscribers[key] ??= new Set();
     subscribers[key].add(cb);
@@ -71,7 +76,7 @@ export const createCustomState = (initialState, customMethods = {}) => {
   const boundMethods = {};
   Object.keys(customMethods).forEach((name) => {
     boundMethods[name] = (...args) =>
-      customMethods[name]({ get, set, setKey }, ...args);
+      customMethods[name]({ get, set, setKey, setSilent, notify }, ...args);
   });
 
   return {
@@ -80,6 +85,8 @@ export const createCustomState = (initialState, customMethods = {}) => {
     use,
     useKey,
     setKey,
+    setSilent,
+    notify,
     ...boundMethods,
   };
 };
@@ -285,12 +292,12 @@ export const cartState = createCustomState(
     },
 
     // Completely set products array
-    setCartItems: ({ set }, items) => {
-      const safeItems = Array.isArray(items) ? items : []
-
-      set('items', safeItems)
-      set('count', safeItems.reduce((s, i) => s + (i.qty || 1), 0))
-      set('total', safeItems.reduce((s, i) => s + ((i.price || 0) * (i.qty || 1)), 0))
+    initCartItems: ({setSilent}, initialItems) => {
+      console.log('initialItems', initialItems)
+      setSilent('items', initialItems) // just set it
+      setSilent('count', initialItems.reduce((s, i) => s + (i.qty || 1), 0))
+      setSilent('total', initialItems.reduce((s, i) => s + ((i.variant.price || 0) * (i.qty || 1)), 0))
+      // NO notify here → subscribers won't be called
     },
 
     // Add a product (or increase qty if exists)

@@ -10,6 +10,7 @@ import { cookies } from "next/headers";
 // 1. This runs on MAIN LAYOUT --> and then pass the fetchCart to setup-cart.jsx
 export async function prefetchCart() {
   const cartId = (await cookies()).get("cartId")?.value;
+  console.warn('MY FUCKER ID BITCH', cartId)
   if (!cartId)  return null;
   return fetchCartFromShopify(cartId)
 }

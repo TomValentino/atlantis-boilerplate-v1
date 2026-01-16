@@ -48,11 +48,11 @@ export default async function Page({ params }) {
       <SetupProductState product={product} products={products} />
       <SetupOverlays overlays={db.overlays} product={product} products={products} />
 
-      {/* {
+      {
         product_template.children.map(item => {
           return renderElement(item, { product });
         })
-      } */}
+      }
       <button>
         <Link href="/cameira-floral-sleepwear-robe-dusty-blue">Floral sleepwear - using default</Link>
       </button>

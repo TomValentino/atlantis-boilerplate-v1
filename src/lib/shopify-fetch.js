@@ -42,7 +42,7 @@ export async function shopifyRequest( query,
   } 
   catch (err) {
     console.error("shopifyRequest ERROR:", err)
-    return { error: true, message: err.message }
+    throw err
   }
 }
 
@@ -72,17 +72,11 @@ export async function getShopifyStorefrontToken(clerkId, storeId) {
       throw new Error("Storefront token not set for this store");
     }
 
-    return {
-      ok: true,
-      token: store.shopifyStorefrontToken
-    };
+    return store.shopifyStorefrontToken
 
-  } catch (err) {
+  } 
+  catch (err) {
     console.error("getShopifyStorefrontToken error:", err);
-
-    return {
-      ok: false,
-      error: err.message || "Unknown error"
-    };
+    throw err
   }
 }

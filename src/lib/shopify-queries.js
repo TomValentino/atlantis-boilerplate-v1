@@ -57,7 +57,7 @@ function normalizeProductsInCollection(collection) {
 export const createStateCartItem = (product, variant, qty) => {
   const formattedCartItem = 
     {
-      lineId: null,
+      line_id: null,
       variant: {
         id: variant.id,
         title: variant.title,
@@ -124,10 +124,17 @@ export function shopifyProductQuery() {
 }
 
 export async function getProductByHandle(handle) {
-  const res = await shopifyRequest(shopifyProductQuery(), { handle });
-  const product = reformatShopifyObj(res?.data?.product);
-  return formatProduct(product);
+  try {
+    const res = await shopifyRequest(shopifyProductQuery(), { handle });
+    const product = reformatShopifyObj(res?.data?.product);
+    return formatProduct(product);
+  } 
+  catch (err) {
+    console.error("getProductByHandle ERROR:", err);
+    return null; // or return { error: true }
+  }
 }
+
 
 export async function getProductsByHandles(handles = []) {
   const results = await Promise.allSettled(

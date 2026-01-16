@@ -1,8 +1,6 @@
 
 import "./global.css";
-import { cookies } from "next/headers";
 import SetupCart from "./setup-cart";
-import { prefetchCart } from "./prefetch-cart";
 
 
 export async function generateMetadata()  {
@@ -14,12 +12,12 @@ export async function generateMetadata()  {
 
 export default async function RootLayout({ children }) {
 
-  const fetchCart = prefetchCart()
+  // const fetchCart = prefetchCart()
 
   return (
     <html lang="en">
       <body >
-        <SetupCart fetchCart={fetchCart} />
+        <SetupCart />
         {children}
       </body>
     </html>
