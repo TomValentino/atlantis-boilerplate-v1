@@ -1,51 +1,15 @@
 
 import React from "react";
-import { CartItem, CartItemQty, CartPrice, CartProducts, CartTitle } from "@/components/cart";
-import { AddToCartButton, CollectionProducts, ProductTitle, ProductWrapper, VariantSelector } from "@/components/products";
-
-
-
-
-function CollectionCard({ collection, children, no_collection_children }) {
-  if (!collection) {
-    console.warn("⚠️ NO PRODUCT!");
-    return <>{no_collection_children}</>; // fallback children when product is missing
-  }
-
-  return (
-    <div style={{ border: "1px solid #eee", padding: "1rem", marginBottom: "1rem" }}>
-      {React.Children.map(children, (child) =>
-        React.isValidElement(child) ? React.cloneElement(child, { collection }) : child
-      )}
-    </div>
-  );
-}
+import { CartCount, CartItem, CartItemQty, CartPrice, CartProducts, CartTitle, CartTotal, CartVariantTitle } from "@/components/cart";
+import { AddToCartButton, CollectionProducts, ProductPrice, ProductTitle, ProductWrapper, VariantSelector } from "@/components/products";
 
 
 
 // 🛠️ --- Component Registry ---
 const componentRegistry = {
-    collection_card: {
-        Component: CollectionCard, needsCollection: true,
-    },
     collection_form: {
         Component: CollectionProducts, needsCollection: true, needsProduct: true,
     },
-    
-    metafield_block: {
-        needsProduct: true,
-        Component: ({ product, namespace, key }) => {
-            return <p>{product.metafields?.[namespace]?.[key]?.value}</p>;
-        }
-    },
-    related_products: {
-        needsProduct: true,
-        Component: ({ product }) => {
-            const related = product.metafields?.custom?.related_products;
-            return related?.map(p => <ProductCard key={p.id} product={p} />);
-        }
-    }
-    ,
     product_wrapper: { 
         Component: ProductWrapper, needsProduct: true 
     },
@@ -53,18 +17,8 @@ const componentRegistry = {
         Component: ProductTitle,
         needsProduct: true,
     },
-
     product_price: {
-        Component: ({ product }) => <p>${product?.price?.min || "N/A"}</p>,
-        needsProduct: true,
-    },
-    variant_selector_01: {
-        Component: ({ product }) =>
-            product?.variants?.map((v) => (
-                <div key={v.id}>
-                    {v.title} - ${v.price.amount}
-                </div>
-            )),
+        Component: ProductPrice,
         needsProduct: true,
     },
     variant_selector: {
@@ -81,9 +35,14 @@ const componentRegistry = {
         Component: AddToCartButton,
         needsProduct: true,
     },
-      
     cart_products: { 
         Component: CartProducts, 
+    },
+    cart_total: { 
+        Component: CartTotal, 
+    },
+    cart_count: { 
+        Component: CartCount, 
     },
     cart_item: {
         Component: CartItem,
@@ -94,9 +53,29 @@ const componentRegistry = {
     cart_title: {
         Component: CartTitle,
     },
+    cart_variant_title: {
+        Component: CartVariantTitle,
+    },
+    cart_title: {
+        Component: CartTitle,
+    },
     cart_price: {
         Component: CartPrice,
     },
+        
+    metafield_block: {
+        needsProduct: true,
+        Component: ({ product, namespace, key }) => {
+            return <p>{product.metafields?.[namespace]?.[key]?.value}</p>;
+        }
+    },
+    related_products: {
+        needsProduct: true,
+        Component: ({ product }) => {
+            const related = product.metafields?.custom?.related_products;
+            return related?.map(p => <ProductCard key={p.id} product={p} />);
+        }
+    }
 };
 
 
@@ -126,14 +105,9 @@ export const renderElement = (element, ctx = {}) => {
     let collection = ctx.collection;
 
     // --- OPTIONAL OVERRIDES FROM ELEMENT PROPS ---
-    if (element.props?.product) {
-        product = element.props.product;
-    }
-
-    if (element.props?.collection) {
-        collection = element.props.collection;
-    }
-
+    if (element.props?.product) product = element.props.product;
+    if (element.props?.collection) collection = element.props.collection;
+    
     // --- Pass inital context (based on page type) - * CAN be overwridden for extra products/pages * ---
     if (needsProduct && product) props.product = product;
     if (needsCollection && collection) props.collection = collection;

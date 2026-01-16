@@ -47,13 +47,30 @@ export const db = {
                         },
                     },
                     {
+                        element_id: 3287237823,
+                        component: "cart_variant_title",
+                        props: {
+                        },
+                    },
+                    {
                         element_id: 7676,
                         component: "cart_price",
                         props: {
                         },
                     },
-                    
                     ]
+                },
+                {
+                    element_id: 344343,
+                    component: "cart_count",
+                    props: {
+                    },
+                },
+                {
+                    element_id: 3454466,
+                    component: "cart_total",
+                    props: {
+                    },
                 },
             ],
         },
@@ -113,7 +130,8 @@ export const db = {
                         element_id: "23344343433232",
                         component: "collection_form",
                         props: {
-                            collection_handle: "summer-2026",
+                            // collection_handle: "summer-2026",
+                            collection_handle: "valentines-sale",
                             initial_number_of_products: 10,
                             paginate_by: 30,
                             no_collection_children: [

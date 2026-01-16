@@ -1,17 +1,8 @@
 
 'use server'
 
-// Create a function that will:
-    // 1. Get users shopify credentials: what do we need?
-    // 2. Run the fetch to shopify to get the 1) product 2) products (if multiple - how?) 
-
-
-// Used for: Onload: fetch all products for product state, builder -> 
-
-
-export async function shopifyRequest(
-    query, 
-  variables = { handle: "ghia-open-crotch-dots-bodysuit-burgundy" }
+export async function shopifyRequest( query, 
+  variables = {  }
 ) {
   try {
 
@@ -48,7 +39,8 @@ export async function shopifyRequest(
     return json
 
 
-  } catch (err) {
+  } 
+  catch (err) {
     console.error("shopifyRequest ERROR:", err)
     return { error: true, message: err.message }
   }

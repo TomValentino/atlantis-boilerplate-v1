@@ -55,6 +55,8 @@ export function SetupOverlays({ overlays, product = null, products = [] }) {
 
 export function SetupProductState({  product = null, products = [] }) {
   
+  console.log('product', product)
+  console.log('products', products)
   productsState.setProducts(product, products)
 
   return null

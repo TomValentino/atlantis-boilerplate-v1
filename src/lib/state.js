@@ -1,5 +1,6 @@
 'use client'
 import { useSyncExternalStore } from "react";
+import { createStateCartItem } from "./shopify-queries";
 
 export const createCustomState = (initialState, customMethods = {}) => {
   const state = { ...initialState };
@@ -264,11 +265,12 @@ export const cartState = createCustomState(
     hasOpened: false,
     show: false,
     isAdding: false,
-    products: [],
+    items: [],
     total: 0,
-    count: 0, // number of products in cart
+    count: 0, // number of items
   },
   {
+    // Show/hide cart
     showCart: ({ get, set }) => {
       if (!get('hasOpened')) set('hasOpened', true)
       set('show', true)
@@ -282,86 +284,87 @@ export const cartState = createCustomState(
       set('show', next)
     },
 
-    setProducts: ({ set }, products) => {
-      set('products', products)
-      set(
-        'total',
-        products.reduce((sum, p) => sum + p.price * (p.quantity || 1), 0)
-      )
-      set(
-        'count',
-        products.reduce((sum, p) => sum + (p.quantity || 1), 0)
-      )
+    // Completely set products array
+    setCartItems: ({ set }, items) => {
+      const safeItems = Array.isArray(items) ? items : []
+
+      set('items', safeItems)
+      set('count', safeItems.reduce((s, i) => s + (i.qty || 1), 0))
+      set('total', safeItems.reduce((s, i) => s + ((i.price || 0) * (i.qty || 1)), 0))
     },
 
-    updateQty: ({ get, set }, variantId, newQty) => {
-      const items = get('products').map(item =>
-        item.variantId === variantId
-          ? { ...item, qty: newQty }
-          : item
-      )
+    // Add a product (or increase qty if exists)
+    addCartItem: ({ get, set }, product, variant, qty = 1) => {
+      console.log(variant)
+      if (!product || !variant) return
 
-      set('products', items)
-      set('count', items.reduce((s, p) => s + p.qty, 0))
-      set('total', items.reduce((s, p) => s + p.price * p.qty, 0))
-    },
+      const items = get('items') || []
 
-
-
-    addProduct: ({ get, set }, item) => {
-      const variantId = item.variantId;
-      const qty = item.qty || 1;
-
-      const existing = get('products').find(p => p.variantId === variantId);
-
-      let newProducts;
+      let newItems
+      const existing = items.find(item => item.variant.id === variant.id)
 
       if (existing) {
-        newProducts = get('products').map(p =>
-          p.variantId === variantId
-            ? { ...p, qty: p.qty + qty }
-            : p
-        );
+        newItems = items.map(item =>
+          item.variant.id === variant.id ? { ...item, qty: item.qty + qty } : item
+        )
       } else {
-        newProducts = [
-          ...get('products'),
-          {
-            id: variantId,
-            variantId,
-            productId: item.productId,
-            title: item.title,
-            price: item.price,
-            qty,
-          },
-        ];
+        newItems = [
+          ...items,
+          createStateCartItem(product, variant, qty)
+        ]
       }
 
-      set('products', newProducts);
-      set('total', newProducts.reduce((s, p) => s + p.price * p.qty, 0));
-      set('count', newProducts.reduce((s, p) => s + p.qty, 0));
+      set('items', newItems)
+      set('count', newItems.reduce((s, i) => s + (i.qty || 1), 0))
+      set('total', newItems.reduce((s, i) => s + ((i.variant.price || 0) * (i.qty || 1)), 0))
       if (!get('hasOpened')) set('hasOpened', true)
       set('show', true)
     },
 
-    removeProduct: ({ get, set }, id) => {
-      const newProducts = get('products').filter(p => p.id !== id)
-      set('products', newProducts)
-      set(
-        'total',
-        newProducts.reduce((sum, p) => sum + p.price * p.quantity, 0)
-      )
-      set(
-        'count',
-        newProducts.reduce((sum, p) => sum + p.quantity, 0)
-      )
+    // Update quantity for a variant
+    updateQty: ({ get, set }, variantId, newQty) => {
+      if (!variantId) return
+
+      const items = get('items') || []
+      const existing = items.find(item => item.variant.id === variantId)
+      if (!existing) return
+
+      let updatedItems
+
+      if (newQty < 1) {
+        // Qty is going below 1 -> remove the product
+        updatedItems = items.filter(item => item.variant.id !== variantId)
+      } else {
+        // Normal update
+        updatedItems = items.map(item =>
+          item.variant.id === variantId ? { ...item, qty: newQty } : item
+        )
+      }
+
+      set('items', updatedItems)
+      set('count', updatedItems.reduce((s, i) => s + (i.qty || 1), 0))
+      set('total', updatedItems.reduce((s, i) => s + ((i.variant.price || 0) * (i.qty || 1)), 0))
     },
 
-    clearCart: ({ set }) => {
-      set('products', [])
-      set('total', 0)
-      set('count', 0)
-      set('show', false)
+    // Remove a product
+    removeProduct: ({ get, set }, variantId) => {
+      if (!variantId) return
+
+      const items = get('items') || []
+      const filtered = items.filter(item => item.variant.id !== variantId)
+
+      set('items', filtered)
+      set('count', filtered.reduce((s, i) => s + (i.qty || 1), 0))
+      set('total', filtered.reduce((s, i) => s + ((i.variant.price || 0) * (i.qty || 1)), 0))
     },
+
+    // Clear everything
+    clearCart: ({ set }) => {
+      set('items', [])
+      set('count', 0)
+      set('total', 0)
+      set('show', false)
+    }
   }
 )
 
