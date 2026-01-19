@@ -22,6 +22,15 @@ export default function ClientPage({ initialProducts }) {
     }
     console.log('UPDATE', updated)
     localStorage.setItem(`collection-state-${collection.handle}`, JSON.stringify(newCollection));
+
+
+    // update history state with products + scroll
+    history.replaceState(
+      { ...history.state, products: updated, scrollY: window.scrollY },
+      document.title
+    );
+
+    
   };
 
   return (

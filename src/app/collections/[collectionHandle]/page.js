@@ -49,7 +49,7 @@ export default async function Page({ params, searchParams }) {
 
   return <>
     <SetupCollectionPageState collection={collection} initialProducts={products} >
-        <ClientPage  initialProducts={products} />
+        <ClientPage collection={collection}  initialProducts={products} />
     </SetupCollectionPageState>
   </>;
 }

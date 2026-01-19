@@ -52,39 +52,58 @@ export const collectionState = createCustomState(
 
 
 export const SetupCollectionPageState = ({ collection, children }) => {
+  const restoredScroll = useRef(false);
 
-    // const didInit = useRef(false);
-    // if (!didInit.current) {
-      // didInit.current = true;
+  // Hydrate collection once on first load
+  useEffect(() => {
+    let initial = collection;
 
-      useEffect(() => {
+    if (typeof window !== "undefined") {
+      const fromHistory = history.state?.products;
+      const fromStorage = localStorage.getItem(`collection-state-${collection.handle}`);
 
-        let initial = collection;
-    
-        if (typeof window !== "undefined") {
-          const saved = localStorage.getItem(`collection-state-${collection.handle}`);
-    
-          if (saved) {
-            try {
-              initial = JSON.parse(saved);
-              console.log('initail', initial)
-            } catch (_) {}
-          }
-        }
-          // Hydrate instantly before paint
-          collectionPageState.setCollection(initial);
-          collectionPageState.setIsLoading(false);
-          
-        
-      }, [])
+      if (fromHistory) {
+        initial = { ...collection, products: fromHistory };
+      } else if (fromStorage) {
+        try {
+          initial = JSON.parse(fromStorage);
+        } catch (_) {}
+      }
+    }
 
-  
-    // }
+    collectionPageState.setCollection(initial);
+    collectionPageState.setIsLoading(false);
+  }, [collection]);
 
+  // Restore scroll after first products render
+  const products = collectionPageState.use("collection")?.products || [];
+  useEffect(() => {
+    if (restoredScroll.current) return;
+    if (!products.length) return;
+    if (history.state?.scrollY != null) {
+      window.scrollTo(0, history.state.scrollY);
+      restoredScroll.current = true;
+    }
+  }, [products]);
 
+  // Track scroll for back/forward
+  useEffect(() => {
+    const handleScroll = () => {
+      history.replaceState(
+        { ...history.state, scrollY: window.scrollY },
+        document.title
+      );
+    };
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   return <>{children}</>;
 };
+
+
+
+
 
 // Hook for components
 export const useCollection = (handle = null) => {
