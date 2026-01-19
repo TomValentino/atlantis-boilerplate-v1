@@ -1,5 +1,6 @@
 import { fetchCollection } from "@/store/collection/collection-server"
 import ClientPage from "./client-page";
+import { SetupCollectionPageState } from "@/store/collection/collection-state";
 
 export default async function Page({ params, searchParams }) {
     const { collectionHandle } = await params;
@@ -46,7 +47,11 @@ export default async function Page({ params, searchParams }) {
     console.log('hasMore', hasMore)
     console.log('nextCursor', nextCursor)
 
-  return <><ClientPage  initialProducts={products} /></>;
+  return <>
+    <SetupCollectionPageState collection={collection} initialProducts={products} >
+        <ClientPage  initialProducts={products} />
+    </SetupCollectionPageState>
+  </>;
 }
 
 

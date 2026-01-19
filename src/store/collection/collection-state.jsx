@@ -31,7 +31,28 @@ export const collectionState = createCustomState(
   }
 );
 
+ export const collectionPageState = createCustomState(
+  {
+    collection: {},  // main collection
+  },
+  {
+    setCollection: ({ set, setKey }, collection) => {
+      set("collection", collection);
+    },
+  }
+);
 
+export const SetupCollectionPageState = ( { collection, children } ) => {
+
+  collectionPageState.setCollection(collection)
+
+
+  return (
+    <>
+    {children}
+    </>
+  )
+}
 
 
 // Hook for components
