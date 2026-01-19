@@ -8,9 +8,18 @@ export const db = {
     overlays: [
         {
             component: "slider_cart_overlay",
-            overlay_id: 233234,
+            element_id: 324534554,
             props: {
                 zIndex: 100,
+                loading_children: [
+                    { 
+                        element_id: 54545445,
+                        component: "title",
+                        props: {
+                            text: "Loading cart"
+                        }
+                    }
+                ]
             },
             children: [
                 {
@@ -74,15 +83,15 @@ export const db = {
                 },
             ],
         },
-        {
-            component: "standard_overlay",
-            overlay_id: 454,
-            props: {
-                overlay_id: 454,
-                zIndex: 60,
-            },
-            children: [],
-        }
+        // {
+        //     component: "standard_overlay",
+        //     overlay_id: 454,
+        //     props: {
+        //         overlay_id: 454,
+        //         zIndex: 60,
+        //     },
+        //     children: [],
+        // }
     ],
     components: {
         "product_tile": {
@@ -110,9 +119,23 @@ export const db = {
                 title: "Minimal template",
                 children: [
                     {
-                        component: "product_title",
+                        component: "title",
                         element_id: "4343",
+                        props: {
+                            text: "Whadduppp yoooooo"
+                        }
+                    },
+                    {
+                        component: "product_title",
+                        element_id: "rttrtr",
                         props: {}
+                    },
+                    {
+                        component: "product_title",
+                        element_id: "4554544",
+                        props: {
+                            Tag: "h2"
+                        }
                     },
                     { 
                         element_id: "2334443344343433232",

@@ -1,8 +1,8 @@
 
 import React from "react";
-import { CartCount, CartItem, CartItemQty, CartPrice, CartProducts, CartTitle, CartTotal, CartVariantTitle } from "@/components/cart";
-import { AddToCartButton, CollectionProducts, ProductPrice, ProductTitle, ProductWrapper, VariantSelector } from "@/components/products";
-
+import { CartCount, CartItem, CartItemQty, CartPrice, CartProducts, CartTitle, CartTotal, CartVariantTitle, SliderCartOverlay } from "@/store/cart/cart-components";
+import { AddToCartButton, ProductPrice, ProductTitle, ProductWrapper, VariantSelector } from "@/store/products/product-components";
+import { CollectionProducts } from "@/store/collection/collection-components";
 
 
 // 🛠️ --- Component Registry ---
@@ -34,6 +34,9 @@ const componentRegistry = {
     add_to_cart_button: { 
         Component: AddToCartButton,
         needsProduct: true,
+    },
+    slider_cart_overlay: {
+        Component: SliderCartOverlay
     },
     cart_products: { 
         Component: CartProducts, 
@@ -75,7 +78,9 @@ const componentRegistry = {
             const related = product.metafields?.custom?.related_products;
             return related?.map(p => <ProductCard key={p.id} product={p} />);
         }
-    }
+    },
+
+
 };
 
 
@@ -127,6 +132,12 @@ export const renderElement = (element, ctx = {}) => {
 
     if (element.component === "cart_products") {
         props.empty_cart_children = (element.props?.empty_cart_children || []).map((child) =>
+            renderElement(child, { product, collection })
+        );
+    }
+
+    if (element.component === "slider_cart_overlay") {
+        props.loading_children = (element.props?.loading_children || []).map((child) =>
             renderElement(child, { product, collection })
         );
     }

@@ -1,10 +1,10 @@
 import { getCachedDB } from "@/lib/cached-db"
-import {  getCollectionsByHandles, getProductByHandle, getProductsByHandles } from "@/lib/shopify-queries"
 import Link from "next/link"
 import { renderElement } from "@/lib/render"
-import { cartState } from "@/lib/state"
-import { MyButty } from "./client-test"
-import { SetupCollectionState, SetupOverlays, SetupProductState } from "@/components/overlays"
+import { getProductByHandle, getProductsByHandles } from "@/store/products/products-server"
+import { SetupProductState } from "@/store/products/product-state"
+import { SetupCollectionState } from "@/store/collection/collection-components"
+import { fetchCollection, getCollectionsByHandles } from "@/store/collection/collection-server"
 
 
 export const dynamic = "force-static"
@@ -27,39 +27,73 @@ export default async function Page({ params }) {
   const product = await getProductByHandle(productHandle); // Todo: Add cusotmisation on what to fetch..?
   if(!product) return <h1>Not found</h1>;
 
+  // Prep data for fetches
   const db = await getCachedDB();
   const product_template = matchProductHandleToProductTemplate(db, productHandle)
   const handles = extractAllProductHandles(product_template);
-  const products = await getProductsByHandles(handles);
-  console.log('product handles', handles, product_template)
-  console.log("%cHere is my product:", "color: gold; font-weight: bold;", product, handles);
-  console.log("%cHere is my products:", "color: gold; font-weight: bold;", products);
-
-  // Collections state is changeable - must be custom
   const collection_handles = extractAllCollectionHandles(product_template)
-  
+
+  // Fetches
+  const products = await getProductsByHandles(handles);
   const all_collections = await getCollectionsByHandles(collection_handles, 5)
+  console.log("%cHere is my product:", "color: gold; font-weight: bold;", product, handles);
   console.log('all collections,', all_collections)
+
+  // Collection pagination
+  // Load first page
+  const page1 = await fetchCollection({
+    handle: "valentines-sale",
+    first: 5,
+    filters: [
+      {
+        productMetafield: {
+          namespace: "custom",
+          key: "color",
+          value: "Black"
+        }
+      }
+    ]
+  })
+
+  // Load next page
+  const page2 = await fetchCollection({
+    handle: "valentines-sale",
+    first: 5,
+    filters: [
+      {
+        variantOption: {
+          name: "Size",
+          value: "XXL"
+        }
+      },
+      { price: { min: 300000, max: 1000000 } },
+    ],
+     sortKey: "PRICE",
+    reverse: true,
+    after: page1.pageInfo.endCursor
+  })
+
+  console.log('page 1: ', page1)
+  console.log('page 2: ', page2)
 
 
   return (
     <>
       <SetupCollectionState collection={null} collections={all_collections}/>
       <SetupProductState product={product} products={products} />
-      <SetupOverlays overlays={db.overlays} product={product} products={products} />
+
+      { 
+        db.overlays.map(overlay =>
+          renderElement(overlay, product, products)
+        )
+      }
 
       {
-        product_template.children.map(item => {
-          return renderElement(item, { product });
-        })
+        product_template.children.map(item => 
+          renderElement(item, { product })
+        )
       }
-      <button>
-        <Link href="/cameira-floral-sleepwear-robe-dusty-blue">Floral sleepwear - using default</Link>
-      </button>
-      <button>
-        <Link href="/milky-lace-suspender-skirt-black">Black skirt - using minimal</Link>
-      </button>
-      <MyButty id={454} />
+
     </>
   )
 }

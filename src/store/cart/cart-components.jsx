@@ -2,12 +2,34 @@
 
 'use client'
 
-import { cartState } from "@/lib/state"
-import React from "react"
+import React, { useEffect } from "react"
+import { cartState } from "./cart-state"
+
+
+export const SliderCartOverlay = ( { className, z_index, children, loading_children }) => {
+
+  const show = cartState.use('show')
+  const hasOpened = cartState.use('hasOpened')
+  const isLoaded = cartState.use('isLoaded')
+
+  return (
+    <div className={`slider-cart ${className} ${show ? 'show' : 'hide'}`} style={{z_index}}>
+    { 
+      !isLoaded  ? loading_children 
+        : hasOpened  ? children 
+        : null
+    }
+    </div>
+  )
+}
+
+
+
 
 export const CartProducts = ({ empty_cart_children, children, wrapperClassName }) => {
 
   const cartItems = cartState.use('items')
+  
   console.log('CARTSTATE', cartItems, empty_cart_children)
   if (!cartItems.length) return empty_cart_children
 
@@ -19,8 +41,6 @@ export const CartProducts = ({ empty_cart_children, children, wrapperClassName }
     </div>
   )
 }
-
-
 
 
 export const CartTotal = ({Tag = 'h1'}) => {

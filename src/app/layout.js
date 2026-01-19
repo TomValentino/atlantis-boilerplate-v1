@@ -1,6 +1,6 @@
 
 import "./global.css";
-import SetupCart from "./setup-cart";
+import SetupCart from "../store/cart/cart-state";
 
 
 export async function generateMetadata()  {
@@ -12,7 +12,6 @@ export async function generateMetadata()  {
 
 export default async function RootLayout({ children }) {
 
-  // const fetchCart = prefetchCart()
 
   return (
     <html lang="en">
@@ -23,3 +22,5 @@ export default async function RootLayout({ children }) {
     </html>
   );
 }
+
+

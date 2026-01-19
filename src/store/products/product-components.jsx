@@ -1,15 +1,19 @@
 'use client'
 
-import { cartState, pageState, productsState, useCollection, useProduct, useVariantSelector, variantSelectorState } from "@/lib/state";
 import React, { useRef, useState } from "react";
+import { cartState } from "../cart/cart-state";
+import { useProduct, useVariantSelector, variantSelectorState } from "./product-state";
+import { useCollection } from "../collection/collection-state";
+
+
 
 // --- ProductTitle ---
-export const ProductTitle = ({ product }) => {
+export const ProductTitle = ({ product, Tag = 'h3' }) => {
   if (!product) {
     console.error("ProductTitle: No product passed!");
     return <h3>No product</h3>;
   }
-  return <h3>{product.title || "No product"}</h3>;
+  return <Tag>{product.title || "No product"}</Tag>;
 };
 
 // --- ProductPrice ---
@@ -163,6 +167,7 @@ export const VariantSelector = ({ product }) => {
   );
 };
 
+
 // --- AddToCartButton ---
 export function AddToCartButton({ product }) {
   if (!product) {
@@ -180,31 +185,12 @@ export function AddToCartButton({ product }) {
 
   const handleAdd = () => { cartState.addCartItem(product, variant, selector?.qty || 1, )  };
 
-  return <button onClick={handleAdd}>Add to Cart</button>;
+  return (
+    <>
+    <button onClick={handleAdd}>Add to Cart</button>
+    <button onClick={() => cartState.toggleCart()}>Toggle cart</button>
+    </>
+  )
 }
 
-// --- CollectionProducts ---
-export const CollectionProducts = ({ collection_handle, children, no_collection_children, wrapperClassName }) => {
-  const collection = useCollection(collection_handle);
-  // console.log('COLLECTION', collection)
 
-  if (!collection) {
-    console.warn("CollectionProducts: No collection found for handle", collection_handle);
-    return <>{no_collection_children}</>;
-  }
-
-  const collectionProducts = collection.products || [];
-  if (!collectionProducts.length) return <>{no_collection_children}</>;
-
-  return (
-    <div className={wrapperClassName}>
-      {collectionProducts.map(product => (
-        <React.Fragment key={product.id}>
-          {React.Children.map(children, child =>
-            React.isValidElement(child) ? React.cloneElement(child, { product }) : child
-          )}
-        </React.Fragment>
-      ))}
-    </div>
-  );
-};

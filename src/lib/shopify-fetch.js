@@ -1,9 +1,7 @@
 
 'use server'
 
-export async function shopifyRequest( query, 
-  variables = {  }
-) {
+export async function shopifyRequest( query,  variables = {  },revalidate = 0 ) {
   try {
 
     const storeId = process.env.NEXT_PUBLIC_STORE_ID
@@ -11,18 +9,24 @@ export async function shopifyRequest( query,
 
     // 1. Fetch
     const res = await fetch(
-      `https://${storeId}.myshopify.com/api/2024-01/graphql.json`,
+      `https://${storeId}.myshopify.com/api/2025-07/graphql.json`,
       {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           "X-Shopify-Storefront-Access-Token": storefrontToken
         },
-        body: JSON.stringify({ query, variables }),
-        next: { revalidate: 3600 }
+        body: JSON.stringify(
+          { 
+            query, 
+            variables 
+          }
+        ),
+        next: revalidate > 0 ? { revalidate } : undefined
       }
     )
 
+    // 2. Validate
     if (!res.ok) {
       const text = await res.text()
       throw new Error(`Shopify HTTP Error (${res.status}): ${text}`)
@@ -35,9 +39,7 @@ export async function shopifyRequest( query,
       throw new Error("Shopify GraphQL Error: " + JSON.stringify(json.errors))
     }
 
-    console.log('JSON', json)
     return json
-
 
   } 
   catch (err) {
@@ -46,37 +48,3 @@ export async function shopifyRequest( query,
   }
 }
 
-
-
-
-export async function getShopifyStorefrontToken(clerkId, storeId) {
-  try {
-    if (!clerkId) throw new Error("Missing clerkId");
-    if (!storeId) throw new Error("Missing store handle");
-
-    const store = await prisma.store.findFirst({
-      where: {
-        clerkId,
-        handle: storeId
-      },
-      select: {
-        shopifyStorefrontToken: true
-      }
-    });
-
-    if (!store) {
-      throw new Error("Store not found for this user + handle");
-    }
-
-    if (!store.shopifyStorefrontToken) {
-      throw new Error("Storefront token not set for this store");
-    }
-
-    return store.shopifyStorefrontToken
-
-  } 
-  catch (err) {
-    console.error("getShopifyStorefrontToken error:", err);
-    throw err
-  }
-}
