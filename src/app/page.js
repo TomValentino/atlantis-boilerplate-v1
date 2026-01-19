@@ -1,4 +1,3 @@
-import { getProduct } from "@/lib/redis";
 
 export default async function Home() {
 
