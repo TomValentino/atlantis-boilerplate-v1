@@ -1,7 +1,7 @@
 'use client'
 
 import { createCustomState } from "@/lib/state";
-import { useEffect } from "react";
+import { useEffect, useLayoutEffect, useRef } from "react";
 
 
 export const collectionState = createCustomState(
@@ -45,36 +45,34 @@ export const collectionState = createCustomState(
 
 
 
+
 export const SetupCollectionPageState = ({ collection, children }) => {
+
+
+    const didInit = useRef(false);
+    if (!didInit.current) {
+      didInit.current = true;
+
+      let initial = collection;
   
-  useEffect(() => {
-    if (!collection?.id) {
-      collectionPageState.setCollection(collection);
-      return;
-    }
-
-    // Try to load previous state for this collection
-    const saved = localStorage.getItem(`collection-state-${collection.id}`);
-
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved);
-        // Hydrate the state store with the saved version
-        collectionPageState.setCollection(parsed);
-        return;
-      } catch (e) {
-        console.warn("Failed to parse saved collection state", e);
+      if (typeof window !== "undefined") {
+        const saved = localStorage.getItem(`collection-state-${collection.id}`);
+  
+        if (saved) {
+          try {
+            initial = JSON.parse(saved);
+          } catch (_) {}
+        }
       }
+  
+      // Hydrate instantly before paint
+      collectionPageState.setCollection(initial);
     }
 
-    // No saved state → use fresh one
-    collectionPageState.setCollection(collection);
 
-  }, [collection]);
 
   return <>{children}</>;
 };
-
 
 // Hook for components
 export const useCollection = (handle = null) => {
