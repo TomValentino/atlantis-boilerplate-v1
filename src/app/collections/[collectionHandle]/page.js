@@ -2,6 +2,9 @@ import { fetchCollection } from "@/store/collection/collection-server"
 import ClientPage from "./client-page";
 import { SetupCollectionPageState } from "@/store/collection/collection-state";
 
+export const dynamic = "force-static"
+export const revalidate = false
+
 export default async function Page({ params, searchParams }) {
     const { collectionHandle } = await params;
     const { color, size, price_min, price_max, tag } = await searchParams
@@ -48,6 +51,7 @@ export default async function Page({ params, searchParams }) {
     console.log('nextCursor', nextCursor)
 
   return <>
+  <h1>Other content........</h1>
     <SetupCollectionPageState collection={collection} initialProducts={products} >
         <ClientPage collection={collection}  initialProducts={products} />
     </SetupCollectionPageState>
