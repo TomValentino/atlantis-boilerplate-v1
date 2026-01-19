@@ -1,6 +1,7 @@
 'use client'
 
 import { createCustomState } from "@/lib/state";
+import { useEffect } from "react";
 
 
 export const collectionState = createCustomState(
@@ -42,17 +43,37 @@ export const collectionState = createCustomState(
   }
 );
 
-export const SetupCollectionPageState = ( { collection, children } ) => {
-
-  collectionPageState.setCollection(collection)
 
 
-  return (
-    <>
-    {children}
-    </>
-  )
-}
+export const SetupCollectionPageState = ({ collection, children }) => {
+  
+  useEffect(() => {
+    if (!collection?.id) {
+      collectionPageState.setCollection(collection);
+      return;
+    }
+
+    // Try to load previous state for this collection
+    const saved = localStorage.getItem(`collection-state-${collection.id}`);
+
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        // Hydrate the state store with the saved version
+        collectionPageState.setCollection(parsed);
+        return;
+      } catch (e) {
+        console.warn("Failed to parse saved collection state", e);
+      }
+    }
+
+    // No saved state → use fresh one
+    collectionPageState.setCollection(collection);
+
+  }, [collection]);
+
+  return <>{children}</>;
+};
 
 
 // Hook for components
