@@ -107,6 +107,100 @@ function shopifyCollectionQuery() {
 }
 
 
+// -------------------------------------------------------------------------------------------//
+// -------------------------------         IDS           ------------------------------------ //
+// -------------------------------------------------------------------------------------------//
+
+export async function getCollectionById(id, productsLimit = 5, vars = {}) {
+  const res = await shopifyRequest(shopifyCollectionByIdQuery(productsLimit), { id, ...vars });
+  const collection = reformatShopifyObj(res?.data?.collection);
+  if (!collection?.products) return collection;
+
+  return {
+    ...collection,
+    products: collection.products.map(p => formatProduct(p))
+  };
+}
+
+export async function getCollectionsByIds(data = [], productsLimit = 5) {
+  const results = await Promise.allSettled(
+    data.map(({ id }) =>
+      shopifyRequest(shopifyCollectionByIdQuery(productsLimit), {
+        id,                     // GID
+        first: productsLimit,    // required!
+        after: null,             // optional, safe to include
+        filters: []              // optional, empty array by default
+      })
+    )
+  );
+
+  return results
+    .map(r => {
+      if (r.status !== "fulfilled") return null;
+
+      const collection = reformatShopifyObj(r.value.data.collection);
+      if (!collection) return null;
+
+      return {
+        ...collection,
+        products: collection.products?.map(p => formatProduct(p)) || []
+      };
+    })
+    .filter(Boolean);
+}
+
+
+// GraphQL query by collection ID
+function shopifyCollectionByIdQuery(productsLimit = 5) {
+  return `
+    query CollectionById(
+      $id: ID!,
+      $first: Int!,
+      $after: String,
+      $filters: [ProductFilter!]
+    ) {
+      collection(id: $id) {
+        id
+        title
+        handle
+        description
+        image { url altText }
+
+        products(first: $first, after: $after, filters: $filters) {
+          edges {
+            cursor
+            node {
+              id
+              title
+              handle
+              featuredImage { url altText }
+              priceRange {
+                minVariantPrice { amount currencyCode }
+                maxVariantPrice { amount currencyCode }
+              }
+              metafield(namespace: "custom", key: "current_color_variation_title_e_g_red_") {
+                value
+              }
+              variants(first: 20) {
+                edges {
+                  node {
+                    id
+                    title
+                    priceV2 { amount currencyCode }
+                    compareAtPriceV2 { amount currencyCode }
+                    selectedOptions { name value }
+                    sku
+                  }
+                }
+              }
+            }
+          }
+          pageInfo { hasNextPage endCursor }
+        }
+      }
+    }
+  `;
+}
 
 
 

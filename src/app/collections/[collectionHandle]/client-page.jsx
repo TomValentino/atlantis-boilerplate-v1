@@ -1,27 +1,27 @@
 "use client";
-import { collectionPageState } from "@/store/collection/collection-state";
+import { collectionPageState, collectionState, useCollection } from "@/store/collection/collection-state";
 import { useState, useLayoutEffect } from "react";
 
-export default function ClientPage({ initialProducts }) {
+export default function ClientPage({ initalCollection, initialProducts }) {
   // Match server on first render → no hydration mismatch
   const [products, setProducts] = useState(initialProducts);
 
-  const collection = collectionPageState.use('collection')
+  const collection = useCollection(initalCollection.id)
   const isLoading = collectionPageState.use('isLoading')
 
   if (isLoading) return <>Loading state......</>
-  if (!collection) return <>NO COLLECTION !</>
+  if (!initalCollection) return <>NO COLLECTION !</>
 
 
 
   const addMoreProducts = (newProducts) => {
     const updated = [...products, ...newProducts];
     const newCollection = {
-        ...collection,
+        ...initalCollection,
         products: updated,
     }
     console.log('UPDATE', updated)
-    localStorage.setItem(`collection-state-${collection.handle}`, JSON.stringify(newCollection));
+    // localStorage.setItem(`collection-state-${collection.handle}`, JSON.stringify(newCollection));
 
 
     // update history state with products + scroll
@@ -30,12 +30,12 @@ export default function ClientPage({ initialProducts }) {
       document.title
     );
 
-    
+
   };
 
   return (
     <div>
-        <pre>{JSON.stringify(collection.products, null, 2)}</pre>
+        <pre>{JSON.stringify(initalCollection.products, null, 2)}</pre>
       {/* <pre>{JSON.stringify(products, null, 2)}</pre> */}
       <button onClick={() => addMoreProducts([product])}>
         Add More

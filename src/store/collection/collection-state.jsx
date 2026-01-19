@@ -4,34 +4,49 @@ import { createCustomState } from "@/lib/state";
 import { useRouter } from "next/navigation";
 import { useEffect, useLayoutEffect, useRef } from "react";
 
-
 export const collectionState = createCustomState(
   {
-    default_collection: {},  // main collection
-    extra_collections: {},   // keyed by handle
+    collections: {},  // keyed by id
   },
   {
-    setCollections: ({ set, setKey }, defaultCollection, collectionsArray = []) => {
-      // Set default collection
-      if (defaultCollection?.handle) {
-        set("default_collection", defaultCollection);
-      } else {
-        console.warn("setCollections → default collection missing handle", defaultCollection);
-      }
+    setCollections: ({ set, setKey }, collectionsArray = []) => {
+      if (!Array.isArray(collectionsArray)) return;
 
-      // Set extra collections
-      if (Array.isArray(collectionsArray)) {
-        collectionsArray.forEach((c) => {
-          if (!c?.handle) {
-            console.warn("setCollections → collection missing handle:", c);
-            return;
-          }
-          setKey("extra_collections", c.handle, c);
-        });
+      collectionsArray.forEach((c) => {
+        if (!c?.id) {
+          console.warn("setCollections → collection missing id:", c);
+          return;
+        }
+        console.log(c, c.id)
+        setKey("collections", c.id, c);
+      });
+
+    },
+
+    setCollection: ({ set, setKey }, collection) => {
+      if (!collection?.id) {
+        console.warn("setCollection → missing id:", collection);
+        return;
       }
+      setKey("collections", collection.id, collection);
+    },
+
+    getCollection: ({ get }, id) => {
+      const collections = get("collections");
+      return collections?.[id] || null;
     },
   }
 );
+
+// Hook to access a collection by id
+export const useCollection = (id) => {
+  const collections = collectionState.use("collections");
+  console.log('ALL COLLECTIONS', collections, id)
+  return collections?.[id] || null;
+};
+
+
+
 
  export const collectionPageState = createCustomState(
   {
@@ -51,66 +66,6 @@ export const collectionState = createCustomState(
 
 
 
-export const SetupCollectionPageState = ({ collection, children }) => {
-  const restoredScroll = useRef(false);
-
-  // Hydrate collection once on first load
-  useEffect(() => {
-    let initial = collection;
-
-    if (typeof window !== "undefined") {
-      const fromHistory = history.state?.products;
-      const fromStorage = localStorage.getItem(`collection-state-${collection.handle}`);
-
-      if (fromHistory) {
-        initial = { ...collection, products: fromHistory };
-      } else if (fromStorage) {
-        try {
-          initial = JSON.parse(fromStorage);
-        } catch (_) {}
-      }
-    }
-
-    collectionPageState.setCollection(initial);
-    collectionPageState.setIsLoading(false);
-  }, [collection]);
-
-  // Restore scroll after first products render
-  const products = collectionPageState.use("collection")?.products || [];
-  useEffect(() => {
-    if (restoredScroll.current) return;
-    if (!products.length) return;
-    if (history.state?.scrollY != null) {
-      window.scrollTo(0, history.state.scrollY);
-      restoredScroll.current = true;
-    }
-  }, [products]);
-
-  // Track scroll for back/forward
-  useEffect(() => {
-    const handleScroll = () => {
-      history.replaceState(
-        { ...history.state, scrollY: window.scrollY },
-        document.title
-      );
-    };
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
-
-  return <>{children}</>;
-};
 
 
 
-
-
-// Hook for components
-export const useCollection = (handle = null) => {
-  const defaultCollection = collectionState.use("default_collection");
-  const extraCollections = collectionState.use("extra_collections");
-
-  if (!handle) return defaultCollection;
-
-  return extraCollections?.[handle] || null;
-};

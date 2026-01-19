@@ -3,12 +3,9 @@ import Link from "next/link"
 import { renderElement } from "@/lib/render"
 import { getProductByHandle, getProductsByHandles } from "@/store/products/products-server"
 import { SetupProductState } from "@/store/products/product-state"
-import { SetupCollectionState } from "@/store/collection/collection-components"
-import { fetchCollection, getCollectionsByHandles } from "@/store/collection/collection-server"
+import { SetupExtraCollectionsState } from "@/store/collection/collection-components"
+import { fetchCollection, getCollectionsByHandles, getCollectionsByIds } from "@/store/collection/collection-server"
 
-
-export const dynamic = "force-static"
-export const revalidate = false
 
 // --- STATIC PARAMS (SSG) ---
 // export async function generateStaticParams() {
@@ -31,11 +28,13 @@ export default async function Page({ params }) {
   const db = await getCachedDB();
   const product_template = matchProductHandleToProductTemplate(db, productHandle)
   const handles = extractAllProductHandles(product_template);
-  const collection_handles = extractAllCollectionHandles(product_template)
+  // const collection_handles = extractAllCollectionHandles(product_template)
+  const collection_ids = extractAllCollectionIds(product_template)
+
 
   // Fetches
   const products = await getProductsByHandles(handles);
-  const all_collections = await getCollectionsByHandles(collection_handles, 5)
+  const all_collections = await getCollectionsByIds(collection_ids, 5)
   console.log("%cHere is my product:", "color: gold; font-weight: bold;", product, handles);
   console.log('all collections,', all_collections)
 
@@ -79,7 +78,7 @@ export default async function Page({ params }) {
 
   return (
     <>
-      <SetupCollectionState collection={null} collections={all_collections}/>
+      <SetupExtraCollectionsState collections={all_collections}/>
       <SetupProductState product={product} products={products} />
 
       { 
@@ -105,7 +104,7 @@ export default async function Page({ params }) {
 // Helpers
 // -------------------------
 
-function extractAllProductHandles(templateObject) {
+export function extractAllProductHandles(templateObject) {
   const handles = new Set()
 
   templateObject.children.forEach(el => {
@@ -117,7 +116,7 @@ function extractAllProductHandles(templateObject) {
   return [...handles]
 }
 
-function extractAllCollectionHandles(templateObject) {
+export function extractAllCollectionHandles(templateObject) {
   const handles = new Map();
 
   templateObject.children.forEach(el => {
@@ -133,7 +132,25 @@ function extractAllCollectionHandles(templateObject) {
   return [...handles.values()];
 }
 
-const matchProductHandleToProductTemplate = (db, productHandle) => {
+export function extractAllCollectionIds(templateObject) {
+  const ids = new Map();
+
+  templateObject.children.forEach(el => {
+    const id = el.props?.collection_id; // <-- use the ID instead of handle
+    if (!id) return;
+
+    ids.set(id, {
+      id,
+      initial_number_of_products: el.props?.initial_number_of_products,
+      paginate_by: el.props?.paginate_by,
+    });
+  });
+
+  return [...ids.values()];
+}
+
+
+export const matchProductHandleToProductTemplate = (db, productHandle) => {
   console.log('db', db)
   const productTemplate =
     db.product_templates.custom_product_map[productHandle] ||

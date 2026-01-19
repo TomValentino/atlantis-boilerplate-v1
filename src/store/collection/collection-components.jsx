@@ -1,30 +1,74 @@
 
 'use client'
-import React, { useRef } from "react";
-import { collectionState, useCollection } from "./collection-state";
+import React, { useEffect, useRef } from "react";
+import { collectionPageState, collectionState, useCollection } from "./collection-state";
 
 
-export function SetupCollectionState({  collection = null, collections = [] }) {
-  
-    const didInit = useRef(false);
-  
+export function SetupExtraCollectionsState({ collections = [] }) {
+  const didInit = useRef(false);
+
   if (!didInit.current) {
     didInit.current = true;
-    collectionState.setCollections(collection, collections)
+
+
+    collectionState.setCollections(collections);
   }
 
-  return null
-  
+  return null;
 }
+
+export const SetupCollectionPage = ({ collection, children }) => {
+  const restoredScroll = useRef(false);
+
+  useEffect(() => {
+    let initial = collection;
+
+    if (typeof window !== "undefined") {
+      const fromHistory = history.state?.products;
+      if (fromHistory) initial = { ...collection, products: fromHistory };
+      try {
+        initial = JSON.parse(fromStorage);
+      } catch (_) {}
+    }
+
+    collectionPageState.setCollection(initial);
+    collectionPageState.setIsLoading(false);
+  }, [collection]);
+
+  // Restore scroll after first products render
+  const products = collectionPageState.use("collection").products;
+  useEffect(() => {
+    if (restoredScroll.current) return;
+    if (history.state?.scrollY != null) {
+      window.scrollTo(0, history.state.scrollY);
+      restoredScroll.current = true;
+    }
+  }, [products]);
+
+  // Track scroll for back/forward
+  useEffect(() => {
+    const handleScroll = () => {
+      history.replaceState(
+        { ...history.state, scrollY: window.scrollY },
+        document.title
+      );
+    };
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  return <>{children}</>;
+};
+
 
 
 // --- CollectionProducts ---
-export const CollectionProducts = ({ collection_handle, children, no_collection_children, wrapperClassName }) => {
-  const collection = useCollection(collection_handle);
+export const CollectionProducts = ({ collection_id, children, no_collection_children, wrapperClassName }) => {
+  const collection = useCollection(collection_id);
   // console.log('COLLECTION', collection)
 
   if (!collection) {
-    console.warn("CollectionProducts: No collection found for handle", collection_handle);
+    console.warn("CollectionProducts: No collection found for handle", collection_id);
     return <>{no_collection_children}</>;
   }
 

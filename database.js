@@ -98,6 +98,24 @@ export const db = {
             children: [],
         },
     },
+      collection_templates: {
+        default_template: "minimal",
+        custom_product_map: {
+            "valentines-sale": "default",
+        },
+        templates: {
+            "default":  { 
+                title: "Default epic template",
+                children: [
+                    { 
+                        id: 34433434,
+                        title:"hello default epic template"
+                    }
+                ],
+                no_product_children: [],
+             },
+        },
+    },
     product_templates: {
         default_template: "minimal",
         custom_product_map: {
@@ -154,7 +172,7 @@ export const db = {
                         component: "collection_form",
                         props: {
                             // collection_handle: "summer-2026",
-                            collection_handle: "valentines-sale",
+                            collection_id: "gid://shopify/Collection/426930012392",
                             initial_number_of_products: 10,
                             paginate_by: 30,
                             no_collection_children: [

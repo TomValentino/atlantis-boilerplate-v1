@@ -1,9 +1,23 @@
-import { fetchCollection } from "@/store/collection/collection-server"
+import { fetchCollection, getCollectionsByHandles } from "@/store/collection/collection-server"
 import ClientPage from "./client-page";
-import { SetupCollectionPageState } from "@/store/collection/collection-state";
+import { SetupCollectionPage } from "@/store/collection/collection-components";
+import { getCachedDB } from "@/lib/cached-db";
+import { extractAllCollectionHandles, extractAllProductHandles } from "@/app/[productHandle]/page";
+import { getProductsByHandles } from "@/store/products/products-server";
 
-export const dynamic = "force-static"
-export const revalidate = false
+
+ const matchCollectionHandleToCollectionTemplate = (db, collectionHandle) => {
+  console.log('db', db)
+  const productTemplate =
+    db.product_templates.custom_product_map[collectionHandle] ||
+    db.product_templates.default_template ||  "minimal"; // final fallback
+
+  return db.product_templates.templates[productTemplate] ||
+    db.product_templates.templates[db.store.product_templates.default_template];
+
+}
+
+
 
 export default async function Page({ params, searchParams }) {
     const { collectionHandle } = await params;
@@ -12,6 +26,7 @@ export default async function Page({ params, searchParams }) {
 
     const filters = buildFiltersFromSearchParams(color, size, price_min, price_max, tag);
     const { sortKey, reverse } = parseSortOptions(searchParams);
+    console.log('filters', filters, color, price_min)
 
     const collection = await fetchCollection({
         handle: collectionHandle,
@@ -20,21 +35,39 @@ export default async function Page({ params, searchParams }) {
         sortKey,
         reverse
     });
+    
+      // Prep data for fetches
+      const db = await getCachedDB();
+      const product_template = matchCollectionHandleToCollectionTemplate(db, collectionHandle)
+      const handles = extractAllProductHandles(product_template);
+      const collection_handles = extractAllCollectionHandles(product_template)
+
+    // Fetches
+    const products = await getProductsByHandles(handles);
+    const all_collections = await getCollectionsByHandles(collection_handles, 5)
+
+    console.log('ALL COLLECTIONS', all_collections)
+
+    
+
+
+
+
 
     // ----- CASE 1: NO COLLECTION FOUND -----
     if (!collection || !collection.id) {
         return <EmptyState message="Collection not found." />;
     }
 
-    const products = collection.products ?? [];
+    const initialProducts = collection.products ?? [];
 
     // ----- CASE 2: COLLECTION EXISTS BUT HAS 0 PRODUCTS -----
-    if (products.length === 0 && filters.length === 0) {
+    if (initialProducts.length === 0 && filters.length === 0) {
         return <EmptyState message="This collection is currently empty." />;
     }
 
     // ----- CASE 3: FILTERS RETURNED 0 PRODUCTS -----
-    if (products.length === 0 && filters.length > 0) {
+    if (initialProducts.length === 0 && filters.length > 0) {
         return (
         <EmptyState
             message="No products match your filters."
@@ -46,15 +79,15 @@ export default async function Page({ params, searchParams }) {
     // ----- CASE 4 + 5: PRODUCTS EXIST -----
     const hasMore = collection.pageInfo?.hasNextPage === true;
     const nextCursor = collection.pageInfo?.endCursor;
-    console.log('products', products)
+    console.log('initialProducts', initialProducts)
     console.log('hasMore', hasMore)
     console.log('nextCursor', nextCursor)
 
   return <>
   <h1>Other content........</h1>
-    <SetupCollectionPageState collection={collection} initialProducts={products} >
-        <ClientPage collection={collection}  initialProducts={products} />
-    </SetupCollectionPageState>
+    <SetupCollectionPage collection={collection} collections={all_collections} initialProducts={initialProducts} >
+        <ClientPage initalCollection={collection}  initialProducts={products} />
+    </SetupCollectionPage>
   </>;
 }
 
